@@ -1,0 +1,31 @@
+@import '/path/file.css';
+@import from './style/defaults.css';
+@import block from './style/base.css';
+@import * as component from './style/component.css';
+
+.box {
+  border: 1px solid #D1D2D3;
+}
+
+/* Compose local */
+.card {
+  compose: box;
+  background: #FFFFFF;
+}
+
+/* complex selector */
+h1#root > p ~ .card .section:not(:first-child):hover .box {
+  background: #DEDEDE;
+}
+
+/* Compose local and imported */
+.section {
+  compose: box, block;
+  padding: 1em;
+}
+
+/* Compose imported prefixed */
+.componentVariant {
+  compose: component.base, card;
+  padding: .25em .5em;
+}
