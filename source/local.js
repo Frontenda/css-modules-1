@@ -1,14 +1,5 @@
-import { dirname, basename } from 'path'
-
 const REGEX_NON_CLASS = /^[^.]|[#>:~]/g
 const REGEX_CLASS = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(\s*)/g
-
-const generateName = (name, file) => {
-  let component = dirname(file).split('/').pop()
-  let filename = basename(file, '.css')
-
-  return `._${component}_${filename}_${name}`
-}
 
 
 const filterRules = (rules, handler) => {
@@ -43,18 +34,14 @@ const setCompose = (compose, handler) => (
 )
 
 
-export default (context, parser) => {
-  const { ast, file, local, exports, imported } = context
+export default (context, { options }) => {
+  const { path, ast, imports, local, exports } = context
   const { rules } = ast.stylesheet
-  let { setClassName } = parser.options
-
-  if (!setClassName) {
-    setClassName = generateName
-  }
+  const { setClass } = options
 
   filterRules(rules, ({ selectors, declarations }) => {
     let selector = selectors[0].replace('.', '')
-    let className = setClassName(selector, file)
+    let className = setClass(selector, path)
     let classes = className
 
     // replace selector with new class name
@@ -62,10 +49,10 @@ export default (context, parser) => {
 
     forEachType(declarations, 'compose', ({ value }) => {
       className += setCompose(value, (name) => {
-        let className = exports[name] || imported[name]
+        let className = exports[name] || imports[name]
 
         if (!className) {
-          throw new Error(`Selector '${name}' not found in ${file}`)
+          throw new Error(`Selector '${name}' not found in ${path}`)
         }
 
         return className

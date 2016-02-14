@@ -1,77 +1,101 @@
+import { dirname, basename, resolve } from 'path'
 import { readFileSync } from 'fs'
 import css from 'css'
 import imports from './imports.js'
 import local from './local.js'
 
 
-const defaults = {}
+const setClass = (name, file) => {
+  let component = dirname(file).split('/').pop()
+  let filename = basename(file, '.css')
+
+  return `._${component}_${filename}_${name}`
+}
+
+
+const resolvePath = (request, from) => {
+  if (request[0] == '.') {
+    request = resolve(dirname(from), request)
+  }
+
+  // TODO: add npm modules resolution
+
+  return request
+}
+
+
+const defaults = {
+  resolve: resolvePath,
+  setClass,
+}
 
 
 export default (options) => {
   options = Object.assign({}, defaults, options)
 
-  const parser = {
-    options,
-    cache: {},
-    plugins: [],
-  }
+  const cache = {}
+  const plugins = []
+  const { resolve } = options
+  const parser = Object.create({
+    get plugins () { return plugins },
+    get options () { return options },
+    get cache () { return cache },
+  })
 
 
   parser.use = (...handlers) => {
-    parser.plugins.push(...handlers)
+    plugins.push(...handlers)
   }
 
 
-  parser.load = (file) => {
-    if (parser.cache[file]) {
-      return parser.cache[file]
+  parser.load = (path, from) => {
+    if (cache[path]) {
+      return cache[path]
     }
 
-    const source = readFileSync(file, 'utf8')
+    if (from) {
+      path = resolve(path, from)
+    }
+
+    const source = readFileSync(path, 'utf8')
     const ast = css.parse(source)
     const context = {
+      path,
+      source,
       ast,
-      file,
-      imported: {},
+      imports: {},
       local: {},
       exports: {},
     }
 
-    for (let plugin of parser.plugins) {
+    for (let plugin of plugins) {
       plugin(context, parser)
     }
 
-    return parser.cache[file] = context
+    return cache[path] = context
   }
 
 
   parser.stringify = () => {
-    let files = Object.keys(parser.cache)
+    let files = Object.keys(cache)
     let source = ''
 
     for (let file of files) {
-      source += css.stringify(parser.cache[file].ast) + '\n\n'
+      source += css.stringify(cache[file].ast) + '\n\n'
     }
 
     // clear cache on stringify
-    parser.cache = {}
+    for (let key in Object.keys(cache)) {
+      delete cache[key]
+    }
 
     return source
   }
 
 
-  parser.requireHook = () => {
-    require.extensions['.css'] = (module, filename) => {
-      const context = parser.load(filename)
-      const source = 'module.exports = ' + JSON.stringify(context.exports)
-
-      return module._compile(source, filename)
-    }
-  }
-
-
   // set default plugins
   parser.use(imports, local)
+
 
   return parser
 }

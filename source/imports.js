@@ -1,15 +1,3 @@
-import { resolve, dirname } from 'path'
-
-
-const resolvePath = (request, from) => {
-  if (request[0] == '.') {
-    request = resolve(dirname(from), request)
-  }
-
-  return request
-}
-
-
 const filterRules = (rules, handler) => {
   for (let i = 0; i < rules.length; ++i) {
     let rule = rules[i]
@@ -26,21 +14,17 @@ const filterRules = (rules, handler) => {
 }
 
 
-export default (context, parser) => {
-  const { file, ast, local, imported, exports } = context
+export default (context, { load }) => {
+  const { path, ast, imports, local, exports } = context
   const { rules } = ast.stylesheet
-  const resolve = parser.options.resolve || resolvePath
 
   filterRules(rules, (rule) => {
     let [ toImport, request ] = rule.import.split('from')
 
     // format request string, remove whitespace & quotes
     request = request.trim().replace(/^["']|["']$/g, '')
-    // resolve full path of request
-    // TODO: add npm modules
-    request = resolve(request, context.file)
 
-    let importedContext = parser.load(request)
+    let importsContext = load(request, path)
 
     // if no class to import, return
     if (!toImport) return
@@ -51,8 +35,8 @@ export default (context, parser) => {
 
       prefix = prefix.trim() + '.'
 
-      Object.keys(importedContext.exports).forEach((name) => {
-        imported[prefix + name] = importedContext.exports[name]
+      Object.keys(importsContext.exports).forEach((name) => {
+        imports[prefix + name] = importsContext.exports[name]
       })
     }
     else {
@@ -60,13 +44,13 @@ export default (context, parser) => {
       toImport = toImport.split(',').map(name => name.trim())
 
       toImport.forEach((name) => {
-        var className = importedContext.exports[name]
+        var className = importsContext.exports[name]
 
         if (!className) {
           throw new Error(`Imported value '${name}' not found in ${request}`)
         }
 
-        imported[name] = className
+        imports[name] = className
       })
     }
   })

@@ -1,29 +1,97 @@
 # CSS Modules
 
-__Work in progress__
+A simpler stab at CSS modules, based on `reworkcss/css`.
 
-A new stab at CSS Modules, simplified code.
 
-### Specifications
+### API
 
-```css
-/* base.css */
+```js
+import { writeFileSync } from 'fs'
+import CSSModules from '@carrd/css-modules'
 
-.button {
-  display: inline-block;
-  padding: .25em .5em;
-}
+const modules = CSSModules(options)
 
-.icon {
-  display: inline-block;
-  padding: .25em;
-}
+const { exports } = modules.load('./index.css')
+// exports.button == '._computed_css_class_name'
 
+// add other files
+modules.load('./base.css')
+modules.load('./theme.css')
+
+writeFileSync('./bundle.css', modules.stringify())
+```
+
+
+#### options
+
+- `resolve` - add a function which resolves the requested path from `.load(path)`, format `resolve(path, from)`
+- `setClass` - add a function which will generate the class names, format `setClass(name, file)` 
+
+
+#### parser.load(path)
+
+```js
+const context = parser.load('./index.css')
+```
+
+Loads a CSS file from a given `path` and returns a `context` object:
+
+- `source` - file source
+- `ast` - CSS abstract syntax tree
+- `path` - file path
+- `imports` - imports class names
+- `local` - local, context bound, class names
+- `exports` - exported class names
+
+
+#### parser.stringify()
+
+Clears all loaded files and returns a bundled CSS string.
+
+```js
+parser.load('./index.css')
+
+let css = parser.stringify()
+```
+
+
+#### parser.use(plugin)
+
+The parser uses a middleware style plugin system which runs the function on every file with the following format:
+
+```js
+
+parser.use((context, parser) => {
+  // act on the context
+})
 ```
 
 
 
-#### `@import * as base from '/path';`
+### `require()` hook example
+
+Hook into Node.js' `require()` module loader.
+
+```js
+import { readFileSync } from 'fs'
+import CSSModules from '@carrd/css-modules'
+
+const parser = CSSModules()
+
+require.extensions['.css'] = (module, filename) => {
+  const { exports } = parser.load(filename)
+  const source = 'module.exports = ' + JSON.stringify(exports)
+
+  return module._compile(source, filename)
+}
+```
+
+
+
+### Specifications
+
+
+#### @import * as base from '/path';
 
 Imports all class names into local scope, prefixed with `base`
 
@@ -37,7 +105,7 @@ Imports all class names into local scope, prefixed with `base`
 
 
   
-#### `@import classname [, classname] from '/path';`
+#### @import classname [, classname] from '/path';
 
 Imports class names into local scope
 
@@ -51,7 +119,7 @@ Imports class names into local scope
 
 
 
-#### `@import from '/path';`
+#### @import from '/path';
 
 Includes all styles into bundle
 
