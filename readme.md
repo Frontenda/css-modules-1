@@ -22,13 +22,13 @@ writeFileSync('./bundle.css', modules.stringify())
 ```
 
 
-#### options
+##### `options`
 
 - `resolve` - add a function which resolves the requested path from `.load(path)`, format `resolve(path, from)`
 - `setClass` - add a function which will generate the class names, format `setClass(name, file)` 
 
 
-#### parser.load(path)
+##### `parser.load(path)`
 
 ```js
 const context = parser.load('./index.css')
@@ -44,7 +44,7 @@ Loads a CSS file from a given `path` and returns a `context` object:
 - `exports` - exported class names
 
 
-#### parser.stringify()
+##### `parser.stringify()`
 
 Clears all loaded files and returns a bundled CSS string.
 
@@ -55,7 +55,7 @@ let css = parser.stringify()
 ```
 
 
-#### parser.use(plugin)
+##### `parser.use(plugin)`
 
 The parser uses a middleware style plugin system which runs the function on every file with the following format:
 
@@ -91,7 +91,7 @@ require.extensions['.css'] = (module, filename) => {
 ### Specifications
 
 
-#### @import * as base from '/path';
+##### `@import * as base from '/path';`
 
 Imports all class names into local scope, prefixed with `base`
 
@@ -105,7 +105,7 @@ Imports all class names into local scope, prefixed with `base`
 
 
   
-#### @import classname [, classname] from '/path';
+##### `@import classname [, classname] from '/path';`
 
 Imports class names into local scope
 
@@ -119,7 +119,7 @@ Imports class names into local scope
 
 
 
-#### @import from '/path';
+##### `@import from '/path';`
 
 Includes all styles into bundle
 
@@ -129,7 +129,7 @@ Includes all styles into bundle
 
 
 
-#### Declaration `composes: classname [, classname];`
+##### `Declaration `composes: classname [, classname];``
 
 Composes parent class name with selected class names: `.iconButton` => `.iconButton .button .icon`
 
@@ -147,4 +147,4 @@ Composes parent class name with selected class names: `.iconButton` => `.iconBut
 ```
 
 
-#### License MIT
+##### `License MIT`
