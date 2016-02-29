@@ -59,7 +59,7 @@ export default (context, { options }) => {
       })
     })
 
-    exports[selector] = className
+    exports[selector] = className.replace('.', '')
   })
 
   // replace class names with generated ones from local context

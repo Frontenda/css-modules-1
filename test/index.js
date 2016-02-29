@@ -9,15 +9,15 @@ import style from '../example/index.css'
 
 test('Load and parse a css file', (t) => {
   // map exports
-  const index_box = '._example_index_box'
-  const index_card = '._example_index_card'
-  const index_section = '._example_index_section'
-  const index_componentVariant = '._example_index_componentVariant'
-  const nested_block = '._style_nested_nested_block'
-  const base_block = '._style_base_block'
-  const component_base = '._style_component_base'
+  const index_box = '_example_index_box'
+  const index_card = '_example_index_card'
+  const index_section = '_example_index_section'
+  const index_componentVariant = '_example_index_componentVariant'
+  const nested_block = '_style_nested_nested_block'
+  const base_block = '_style_base_block'
+  const component_base = '_style_component_base'
   const normalImport = "@import '/path/file.css';"
-  const complex_selector = `h1#root > p ~ ${index_card} ${index_section}:not(:first-child):hover ${index_box}`
+  const complex_selector = `h1#root > p ~ .${index_card} .${index_section}:not(:first-child):hover .${index_box}`
 
   const parser = CSSModules()
   const file = resolve(__dirname, '../example/index.css')
@@ -39,8 +39,8 @@ test('Load and parse a css file', (t) => {
 
 
 test('require() hook', (t) => {
-  const index_box = '._example_index_box'
-  const index_card = '._example_index_card'
+  const index_box = '_example_index_box'
+  const index_card = '_example_index_card'
 
   let classes = ['box', 'card', 'section', 'componentVariant']
 

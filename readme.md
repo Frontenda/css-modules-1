@@ -147,4 +147,4 @@ Composes parent class name with selected class names: `.iconButton` => `.iconBut
 ```
 
 
-##### `License MIT`
+#### License ISC
