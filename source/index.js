@@ -33,13 +33,12 @@ const defaults = {
 export default (options) => {
   options = Object.assign({}, defaults, options)
 
-  const cache = {}
+  const cache = new Map()
   const plugins = []
   const { resolve } = options
   const parser = Object.create({
     get plugins () { return plugins },
     get options () { return options },
-    get cache () { return cache },
   })
 
 
@@ -49,8 +48,8 @@ export default (options) => {
 
 
   parser.load = (path, from) => {
-    if (cache[path]) {
-      return cache[path]
+    if (cache.has(path)) {
+      return cache.get(path)
     }
 
     if (from) {
@@ -72,22 +71,22 @@ export default (options) => {
       plugin(context, parser)
     }
 
-    return cache[path] = context
+    // save to cache
+    cache.set(path, context)
+
+    return context
   }
 
 
   parser.stringify = () => {
-    let files = Object.keys(cache)
     let source = ''
 
-    for (let file of files) {
-      source += css.stringify(cache[file].ast) + '\n\n'
+    for (let file of cache.values()) {
+      source += css.stringify(file.ast) + '\n\n'
     }
 
     // clear cache on stringify
-    for (let key in Object.keys(cache)) {
-      delete cache[key]
-    }
+    cache.clear()
 
     return source
   }
