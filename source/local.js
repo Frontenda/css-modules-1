@@ -1,4 +1,4 @@
-const REGEX_NON_CLASS = /^[^.]|[#>:~]/g
+const REGEX_NON_CLASS = /^[^.]|[#>:~]|[^.\w]/
 const REGEX_CLASS = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(\s*)/g
 
 
@@ -10,7 +10,7 @@ const filterRules = (rules, handler) => {
     // ignore complex selector rules
     if (rule.selectors.length > 1) continue
     // ignore non single class selectors
-    if (rule.selectors[0][0] != '.') continue
+    if (REGEX_NON_CLASS.test(rule.selectors[0])) continue
 
     handler(rule, i)
   }
@@ -68,7 +68,7 @@ export default (context, { options }) => {
 
     rule.selectors = rule.selectors.map(selector => (
       selector.replace(REGEX_CLASS, (match, className, whitespace) => (
-        (local[className] ? local[className] : className) + whitespace
+        (local[className] ? local[className] : '.' + className) + whitespace
       ))
     ))
   }
