@@ -1,0 +1,6 @@
+@import button from './theme.css';
+
+.icon_button {
+  compose: button;
+  padding: .5em 1em;
+}

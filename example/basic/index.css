@@ -1,0 +1,24 @@
+@import * as theme from './defaults.css';
+@import block, inline-block from './base.css';
+
+.box {
+  border: 1px solid #D1D2D3;
+}
+
+/* Compose local */
+.card {
+  compose: box, block;
+  background: #FFFFFF;
+}
+
+/* Compose local and imported */
+.section {
+  compose: inline-block, theme.grid;
+  padding: 1em;
+}
+
+/* complex selector */
+h1.header > p ~ .card .section:not(:first-child):hover .box {
+  background: #DEDEDE;
+}
+

@@ -1,4 +1,4 @@
-import CSSModules from '../source/index.js'
+import CSSModules from '../../source/index.js'
 
 
 const parser = CSSModules()

@@ -1,0 +1,5 @@
+@import '/path/to/file.css';
+
+.block {
+  display: block;
+}

@@ -1,0 +1,6 @@
+@import block from './base.css';
+
+.button {
+  compose: block;
+  border: 1px solid #CCCCCC;
+}

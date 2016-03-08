@@ -1,52 +1,69 @@
-import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import test from 'tape'
 import CSSModules from '../source/index.js'
-import requireHook from './requireHook.js'
-// require hook sample import
-import style from '../example/index.css'
 
 
-test('Load and parse a css file', (t) => {
-  // map exports
-  const index_box = '_example_index_box'
-  const index_card = '_example_index_card'
-  const index_section = '_example_index_section'
-  const index_componentVariant = '_example_index_componentVariant'
-  const nested_block = '_style_nested_nested_block'
-  const base_block = '_style_base_block'
-  const component_base = '_style_component_base'
-  const normalImport = "@import '/path/file.css';"
-  const complex_selector = `h1#root > p ~ .${index_card} .${index_section}:not(:first-child):hover .${index_box}`
+test('basic functionality', (t) => {
+  const css = CSSModules()
+  const file = resolve(__dirname, '../example/basic/index.css')
+  const { exports } = css.load(file)
+  const string = css.stringify()
 
-  const parser = CSSModules()
-  const file = resolve(__dirname, '../example/index.css')
-  const context = parser.load(file)
+  const grid = '_basic_defaults_grid'
+  const block = '_basic_base_block'
+  const inline_block = '_basic_base_inline-block'
+  const box = '_basic_index_box'
+  const card = `_basic_index_card`
+  const section = `_basic_index_section`
+  const complex_selector = `h1.header > p ~ .${card} .${section}:not(:first-child):hover .${box}`
 
-  t.equal(context.exports.box, index_box)
-  t.equal(context.exports.card, `${index_card} ${index_box}`)
-  t.equal(context.exports.section, `${index_section} ${index_box} ${base_block} ${nested_block}`)
-  t.equal(context.exports.componentVariant, `${index_componentVariant} ${component_base} ${index_card} ${index_box}`)
+  t.equal(exports.box, box)
+  t.equal(exports.card, `_basic_index_card ${box} ${block}`)
+  t.equal(exports.section, `_basic_index_section ${inline_block} ${grid}`)
 
-
-  let css = parser.stringify()
-
-  t.ok(~css.indexOf(normalImport), 'normal @import behaviour')
-  t.ok(~css.indexOf(complex_selector), 'replace class names with generated ones')
+  t.ok(string.includes(complex_selector), 'replace class names with generated ones')
+  t.ok(!string.includes('compose'), 'compose declarations are removed')
 
   t.end()
 })
 
 
-test('require() hook', (t) => {
-  const index_box = '_example_index_box'
-  const index_card = '_example_index_card'
+test('nested imports', (t) => {
+  const css = CSSModules()
+  const file = resolve(__dirname, '../example/nested/index.css')
+  const { exports } = css.load(file)
 
-  let classes = ['box', 'card', 'section', 'componentVariant']
+  const block = '_nested_base_block'
+  const button = '_nested_theme_button'
+  const icon_button = '_nested_index_icon_button'
 
-  t.deepEqual(Object.keys(style), classes)
-  t.equal(style.box, index_box)
-  t.equal(style.card, `${index_card} ${index_box}`)
+  t.equal(exports.icon_button, `${icon_button} ${button} ${block}`)
+
+  t.end()
+})
+
+
+test('raw imports', (t) => {
+  const css = CSSModules()
+  const file = resolve(__dirname, '../example/raw/index.css')
+  const { exports } = css.load(file)
+  const string = css.stringify()
+
+  t.equal(Object.keys(exports).length, 0)
+  t.ok(string.includes('.float-left'))
+  t.ok(string.includes('.clearfix'))
+
+  t.end()
+})
+
+
+test('ignore normal @import', (t) => {
+  const css = CSSModules()
+  const file = `${__dirname}/sample/normal_import.css`
+  css.load(file)
+  const string = css.stringify()
+
+  t.ok(string.includes("@import '/path/to/file.css';"))
 
   t.end()
 })

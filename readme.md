@@ -22,13 +22,13 @@ writeFileSync('./bundle.css', modules.stringify())
 ```
 
 
-##### `options`
+#### `options`
 
 - `resolve` - add a function which resolves the requested path from `.load(path)`, format `resolve(path, from)`
-- `setClass` - add a function which will generate the class names, format `setClass(name, file)` 
+- `setName` - add a function which will generate the class names, format `setName(name, path)` 
 
 
-##### `parser.load(path)`
+#### `parser.load(path)`
 
 ```js
 const context = parser.load('./index.css')
@@ -44,7 +44,7 @@ Loads a CSS file from a given `path` and returns a `context` object:
 - `exports` - exported class names
 
 
-##### `parser.stringify()`
+#### `parser.stringify()`
 
 Clears all loaded files and returns a bundled CSS string.
 
@@ -55,7 +55,7 @@ let css = parser.stringify()
 ```
 
 
-##### `parser.use(plugin)`
+#### `parser.use(plugin)`
 
 The parser uses a middleware style plugin system which runs the function on every file with the following format:
 
@@ -68,12 +68,11 @@ parser.use((context, parser) => {
 
 
 
-### `require()` hook example
+#### `require()` hook example
 
 Hook into Node.js' `require()` module loader.
 
 ```js
-import { readFileSync } from 'fs'
 import CSSModules from '@carrd/css-modules'
 
 const parser = CSSModules()
@@ -87,11 +86,19 @@ require.extensions['.css'] = (module, filename) => {
 ```
 
 
+## Specifications
 
-### Specifications
+
+#### `@import from '/path';`
+
+Includes all styles into bundle, parsing and generating class names.
+
+```css
+@import from './base.css';
+```
 
 
-##### `@import * as base from '/path';`
+#### `@import * as base from '/path';`
 
 Imports all class names into local scope, prefixed with `base`
 
@@ -104,8 +111,7 @@ Imports all class names into local scope, prefixed with `base`
 ```
 
 
-  
-##### `@import classname [, classname] from '/path';`
+#### `@import classname [, classname] from '/path';`
 
 Imports class names into local scope
 
@@ -118,33 +124,48 @@ Imports class names into local scope
 ```
 
 
+#### `@import raw '/path';`
 
-##### `@import from '/path';`
-
-Includes all styles into bundle
+Imports a file as is, without parsing and handling its classes. Useful when importing CSS files that you don't want to modify.
 
 ```css
-@import from './base.css';
+@import raw './some_library_styles.css';
 ```
 
 
+### `composes: classname [, classname];`
 
-##### `Declaration `composes: classname [, classname];``
-
-Composes parent class name with selected class names: `.iconButton` => `.iconButton .button .icon`
+Declaration `compose` composes parent class name with the provided class names.
 
 ```css
-@import icon from './base.css';
+/* theme.css */
+.icon {
+  border: 1px solid #999999;
+  width: 2em;
+  height: 2em;
+}
+```
+
+```css
+/* index.css */
+@import icon from './theme.css';
 
 .button {
   border: 1px solid #DEDEDE;
 }
 
 .iconButton {
-  compose: button, icon;
+  compose: button, icon;    <-- here
   font-size: .875em;
 }
 ```
 
+```js
+// index.js
+import style from './style.css'
 
-#### License ISC
+style.iconButton == '.iconButton .button .icon'
+```
+
+
+### License ISC

@@ -1,57 +1,85 @@
-const filterRules = (rules, handler) => {
+// format request string, remove whitespace & quotes
+const fmtRequest = (string) => (
+  string.trim().replace(/^["']|["']$/g, '')
+)
+
+
+// returns an array of imports:
+// [{ type, request, toImport }]
+const getImports = (rules) => {
+  const imports = []
+
   for (let i = 0; i < rules.length; ++i) {
-    let rule = rules[i]
+    const rule = rules[i]
 
     if (rule.type != 'import') continue
-    // ignore regular imports
-    if (!~rule.import.indexOf('from')) continue
 
-    handler(rule, i)
+    if (rule.import.includes('from')) {
+      const [ toImport, request ] = rule.import.split('from')
 
-    // remove rule
-    rules.splice(i--, 1)
+      imports.push({
+        request: fmtRequest(request),
+        type: 'module',
+        toImport,
+      })
+
+      // remove rule
+      rules.splice(i--, 1)
+    }
+
+    if (rule.import.includes('raw')) {
+      const [ _, request ] = rule.import.split('raw')
+
+      imports.push({
+        request: fmtRequest(request),
+        type: 'raw',
+      })
+
+      // remove rule
+      rules.splice(i--, 1)
+    }
   }
+
+  return imports
 }
 
 
-export default (context, { load }) => {
-  const { path, ast, imports, local, exports } = context
+// format import names: 'box, button'
+const fmtImportNames = (string) => (
+  string.split(',').map(name => name.trim())
+)
+
+
+export default ({ parser, module }) => {
+  const { path, ast, imports } = module
   const { rules } = ast.stylesheet
 
-  filterRules(rules, (rule) => {
-    let [ toImport, request ] = rule.import.split('from')
+  for (let { type, request, toImport } of getImports(rules)) {
+    const newModule = parser.load(request, { type, from: path })
 
-    // format request string, remove whitespace & quotes
-    request = request.trim().replace(/^["']|["']$/g, '')
+    if (!toImport) continue
 
-    let importsContext = load(request, path)
-
-    // if no class to import, return
-    if (!toImport) return
-
-    // prefix imports
-    if (~toImport.indexOf('*')) {
-      let [ asterix, prefix ] = toImport.split('* as ')
+    // prefix imports: `theme.button`
+    if (toImport.includes('*')) {
+      let [ _, prefix ] = toImport.split('* as ')
 
       prefix = prefix.trim() + '.'
 
-      Object.keys(importsContext.exports).forEach((name) => {
-        imports[prefix + name] = importsContext.exports[name]
+      Object.keys(newModule.exports).forEach((name) => {
+        imports[prefix + name] = newModule.exports[name]
       })
     }
+    // named imports
     else {
-      // format names
-      toImport = toImport.split(',').map(name => name.trim())
-
-      toImport.forEach((name) => {
-        var className = importsContext.exports[name]
+      for (let name of fmtImportNames(toImport)) {
+        const className = newModule.exports[name]
 
         if (!className) {
           throw new Error(`Imported value '${name}' not found in ${request}`)
         }
 
         imports[name] = className
-      })
+      }
     }
-  })
+  }
 }
