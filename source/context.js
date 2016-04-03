@@ -61,14 +61,17 @@ export default ({ parser, module }) => {
     exports[className] = classes
   }
 
-  // replace class selector with generated name
-  for (let rule of rules) {
-    if (rule.type != 'rule') continue
-
+  const fmtSelector = (rule) => {
     rule.selectors = rule.selectors.map((selector) => (
       selector.replace(REGEX_CLASS, (_, className) => (
         '.' + (context[className] || className)
       ))
     ))
+  }
+
+  // replace class selector with generated name
+  for (let rule of rules) {
+    if (rule.type != 'rule') fmtSelector(rule)
+    if (rule.type != 'media') rule.rules.forEach(fmtSelector)
   }
 }
