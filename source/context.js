@@ -71,7 +71,7 @@ export default ({ parser, module }) => {
 
   // replace class selector with generated name
   for (let rule of rules) {
-    if (rule.type != 'rule') fmtSelector(rule)
-    if (rule.type != 'media') rule.rules.forEach(fmtSelector)
+    if (rule.type == 'rule') fmtSelector(rule)
+    if (rule.type == 'media') rule.rules.forEach(fmtSelector)
   }
 }
